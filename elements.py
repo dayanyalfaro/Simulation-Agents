@@ -77,9 +77,13 @@ class Robot(Element):
             for direction in range(0, 4):
                 v = self.find_next_step(direction)
                 if self.environment.is_in(v) and not d[v] and type(self.environment[v]) is not Obstacle:
+                    element = self.environment[v]
                     d[v] = d[u] + 1
                     pi[v] = u
-                    q.append(v)
+                    on_child_no_pass = self.environment.robot.child and (type(element) is Child or (type(element) is Playpen and element.child))
+                    if not on_child_no_pass:
+                        q.append(v)
+                        
         return d,pi
 
     def get_path(self, pi, v):
