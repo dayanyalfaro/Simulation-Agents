@@ -73,7 +73,7 @@ class Robot(Element):
         d[self.pos] = 0
         q = [self.pos]
         while q:
-            u = q[0]
+            u = q.pop(0)
             for direction in range(0, 4):
                 v = self.find_next_step(direction)
                 if self.environment.is_in(v) and not d[v] and type(self.environment[v]) is not Obstacle:
@@ -88,7 +88,7 @@ class Robot(Element):
 
     def get_path(self, pi, v):
         path = []
-        while pi[v]:
+        while v:
             path.insert(0, pi[v])
             v = pi[v]
         return path
@@ -97,8 +97,8 @@ class Robot(Element):
         min = self.environment.height * self.environment.width
         element = None
         for e in elements:
-            if d[e.pos] < min:
-                min = d[e.pos]
+            if d[e] and d[e] < min:
+                min = d[e]
                 element = e
         return element
 
@@ -118,9 +118,9 @@ class ChildsFirstRobot(Robot):
                     self.environment[self.pos] = Child(self.pos, self.environment)
                 else:
                     playpens = self.environment.get_playpen()
-                    empty_playpens = [ p for p in playpens if not p.child]
+                    empty_playpens = [ p for p in playpens if not self.environment[p].child]
                     near_playpen = self.find_near_element(d, empty_playpens)
-                    path = self.get_path(pi, near_playpen.pos)
+                    path = self.get_path(pi, near_playpen)
                     next = path[1] if len(path) > 1 else path[0] 
                     self.pos = next
                     if type(self.environment[next]) is Playpen and not self.environment[next].child:
@@ -129,15 +129,15 @@ class ChildsFirstRobot(Robot):
             else:
                 dirties = self.environment.get_dirty_spaces()
                 near_dirty = self.find_near_element(d, dirties)
-                path = self.get_path(pi, near_dirty.pos)
+                path = self.get_path(pi, near_dirty)
                 next = path[0]
                 self.pos = next
         else:
             if self.child:
                 playpens = self.environment.get_playpen()
-                empty_playpens = [ p for p in playpens if not p.child]
+                empty_playpens = [ p for p in playpens if not self.environment[p].child]
                 near_playpen = self.find_near_element(d, empty_playpens)
-                path = self.get_path(pi, near_playpen.pos)
+                path = self.get_path(pi, near_playpen)
                 next = path[1] if len(path) > 1 else path[0] 
                 self.pos = next
                 if type(self.environment[next]) is Playpen and not self.environment[next].child:
@@ -147,7 +147,7 @@ class ChildsFirstRobot(Robot):
                 childs = self.environment.get_childs()
                 if childs:
                     near_child = self.find_near_element(d, childs)
-                    path = self.get_path(pi, near_child.pos)
+                    path = self.get_path(pi, near_child)
                     next = path[0]
                     self.pos = next
                     if type(self.environment[next]) is Child:
@@ -158,7 +158,7 @@ class ChildsFirstRobot(Robot):
                 else:
                     dirties = self.environment.get_dirty_spaces()
                     near_dirty = self.find_near_element(d, dirties)
-                    path = self.get_path(pi, near_dirty.pos)
+                    path = self.get_path(pi, near_dirty)
                     next = path[0]
                     self.pos = next
 
@@ -167,9 +167,9 @@ class NearFirstRobot(Robot):
         d, pi = self.bfs()
         if self.child:
             playpens = self.environment.get_playpen()
-            empty_playpens = [ p for p in playpens if not p.child]
+            empty_playpens = [ p for p in playpens if not self.environment[p].child]
             near_playpen = self.find_near_element(d, empty_playpens)
-            path = self.get_path(pi, near_playpen.pos)
+            path = self.get_path(pi, near_playpen)
             next = path[1] if len(path) > 1 else path[0] 
             self.pos = next
             if type(self.environment[next]) is Playpen and not self.environment[next].child:
@@ -180,7 +180,7 @@ class NearFirstRobot(Robot):
         else:
             elements = self.environment.get_dirty_spaces() + self.environment.get_childs()
             near_element = self.find_near_element(d, elements)
-            path = self.get_path(pi, near_element.pos)
+            path = self.get_path(pi, near_element)
             next = path[0]
             self.pos = next
             if type(self.environment[next]) is Child:
