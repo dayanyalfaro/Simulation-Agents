@@ -7,8 +7,9 @@ class Environment:
         self.height = height
         self.total = width * height
         self.matrix = {(i, j): None for i in range(height) for j in range(width)}
-        self.robot = None 
-        self.set_playpen(children)
+        self.robot = None
+        while not self.set_playpen(children, pos=(random.randint(0, height - 1), random.randint(0, width - 1))):
+            pass
         print('Playpen Done')
         self.initialize(dirtiness, Dirty)
         print('Dirty Done')
@@ -44,19 +45,21 @@ class Environment:
     def __setitem__(self, key,value):
         self.matrix[key] = value
 
-    def set_playpen(self, children):
-        i = random.randint(0, self.height - 1)
-        j = random.randint(0, self.width - 1)
-        playpen = Playpen((i, j), self)
-        self.matrix[(i, j)] = playpen
-        amount = children - 1
-        while amount:
-            direction = random.randint(0,3)
-            next = playpen.find_next_step(direction)
-            if self.is_in(next) and not self.matrix[next]:
-                playpen = Playpen(next, self)
-                self.matrix[next] = playpen
-                amount -= 1
+    def set_playpen(self, children, pos, current=0):
+        if current < children:
+            if self.is_in(pos) and not self.matrix[pos]:
+                playpen = Playpen(pos, self)
+                self.matrix[pos] = playpen
+                direction = random.randint(0,3)
+                next = playpen.find_next_step(direction)
+                if self.set_playpen(children, next, current + 1):
+                    return True
+                else:
+                    self.matrix[pos] = None
+                    return False
+            else:
+                return False
+        return True
 
     def verify_factibility(self):
         not_obstacles = [pos for pos in self.matrix.keys() if type(self.matrix[pos]) is not Obstacle]
@@ -87,7 +90,11 @@ class Environment:
         return factible
 
     def initialize(self, percent, initializer):
-        amount = self.total * percent / 100
+        amount = 0
+        if initializer == Child:
+            amount = percent
+        else:
+            amount = int(self.total * percent / 100)
         while amount:
             i = random.randint(0, self.height - 1)
             j = random.randint(0, self.width - 1)

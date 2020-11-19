@@ -14,7 +14,8 @@ class Simulation:
     def run(self):
         times = 1
         while True:
-            print('Turno',times )
+            print('Turno', times)
+            print(s.environment)
             is_final_state, state = self.environment.is_final_state()
             if is_final_state:
                 self.terminate(state)
@@ -26,6 +27,7 @@ class Simulation:
                 self.environment.robot.move()
                 self.environment.natural_change()
                 if not times % self.interval:
+                    print('RANDOM CHANGE')
                     self.environment.random_change()
             times += 1
 
@@ -33,6 +35,5 @@ class Simulation:
         print('State', state)
 
 
-s = Simulation(10, 10, 5, 5, 5, 5, ChildsFirstRobot)
-print(s.environment)
+s = Simulation(width = 10, height = 10, dirtiness = 20, obstacles = 20, children = 10, interval = 5, robot_init = NearFirstRobot)
 s.run()
