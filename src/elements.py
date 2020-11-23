@@ -127,7 +127,9 @@ class Robot(Element):
         pass
 
     def blocked(self):
-        for direction in range(3):
+        directions = [0, 1, 2, 3]
+        random.shuffle(directions)
+        for direction in directions:
             next = self.find_next_step(direction)
             if self.environment.is_in(next) and self.environment[next] is not Obstacle and not (self.environment[next] is Playpen and self.environment[next].child):
                 self.pos = next
@@ -137,9 +139,8 @@ class Robot(Element):
 class ChildsFirstRobot(Robot):     
     def move(self):
         d, pi = self.bfs()
-        dirty_spaces = len(self.environment.get_dirty_spaces())
-        dirty_percent = dirty_spaces / self.environment.total
-        if dirty_percent > 0.5:
+        dirty_percent = self.environment.get_dirty_percent()
+        if dirty_percent > 50:
             print('High Dirtiness Level')
             if self.child:
                 if not self.environment[self.pos]:

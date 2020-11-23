@@ -1,0 +1,216 @@
+\documentclass[12pt,a4paper]{article}
+%\usepackage[utf8x]{inputenc}
+%\usepackage{ucs}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{makeidx}
+\usepackage{graphicx}
+\usepackage[width=17.00cm, height=23.00cm]{geometry}
+
+
+
+
+
+\author{Dayany Alfaro Gonz\'alez-C411}
+\date{}
+\title{Proyecto de Simulaci\'on\\
+	Agentes}
+\begin{document}
+	\maketitle
+	\section{Principales ideas seguidas para la soluci\'on del problema}
+	Para darle soluci\'on al problema se hizo uso del lengaje Python como herramienta. Se model\'o el ambiente como una clase con ciertas funcionalidades y los elementos que interact\'uan en este como una jerarqu\'ia de clases. 
+	
+	Al inicio de una simulaci\'on se garantiza que el ambiente construido es factible, que los obst\'aculos no bloqueen el camino del robot hacia ning\'un elemento del ambiente, que el robot comienza en una casilla vac\'ia sin cargar a ning\'un ni\~no. 
+	
+	Se proponen dos modelos de agentes para describir el comportamiento del robot. La estrategia de ambos modelos puede ser considerada h\'ibrida entre reactivo y proactivo, pero cada uno presenta matices m\'as marcados de alguno de los rasgos. 
+	
+	El desempe\~no de ambos modelos fue evaluado en 10 configuraciones de ambientes iniciales diferentes y para cada una de ellas se ejecutaron 30 simulaciones.      
+	
+	\section{Modelos de agentes considerados}	
+	\subsection{Modelo 1}
+	El primer modelo que se propone se puede clasificar como un h\'ibrido entre proactivo y reactivo, donde destaca el comportamiento proactivo. La estrategia que sigue se basa en priorizar la ubicacio\'on de los niños en el corral por encima de limpiar la suciedad.	Si la suciedad se ha acumulado demasiado entonces el robot priorizará la limpieza.
+	
+	Para recoger un ni\~no analiza la distancia a estos y selecciona el m\'as cercano a su posici\'on. Una vez ha recogido un ni\~no selecciona el corral mas distante a su posici\'on (esto para evitar que al colocar ni\~nos en el corral estos bloqueen la entrada a el robot a los corrales que est\'en detr\'as y sean inaccesibles desde otras posiciones) y se dedica exclusivamente a llevarlo a ese corral. En el proceso de moverse hacia un ni\~no para recogerlo o guardarlo en el corral, si el robot se encuentra encima de una casilla sucia, este no la limpiará porque prioriza por encima de todo a los ni\~nos.
+	
+	Si en alg\'un turno detecta que la suciedad en el ambiente ha sobrepasado el 50\% entonces pasa a priorizar la limpieza de suciedad hasta que esta vuelva a estar por debajo del 50\% y entonces vuelve a retomar la recogida de ni\~nos. Si en el momento en que detecta este aumento de suciedad est\'a cargando un ni\~no primero culminar\'a su objetivo de llevarlo al corral y despu\'es se dedicar\'a al control de la suciedad. 
+	
+	Para limpiar la suciedad el robot simplemente encuentra la
+	casilla m\'as cercana que est\'e sucia y se mueve hacia ella para limpiarla.
+	
+	Este modelo va a estar encapsulado en la clase \texttt{ChildsFirstRobot}.
+	
+	
+	\subsection{Modelo 2}
+		El segundo modelo que se propone tambi\'en se puede clasificar como un h\'ibrido entre proactivo y reactivo, pero en este caso destaca el comportamiento reactivo. La estrategia de este robot va a estar guiada por la distancia de su posici\'on al resto de los elementos del ambiente.
+		
+		En cada turno se compara la distancia hacia las suciedades y los ni\~nos en el ambiente. Si lo m\'as cercano al robot es un ni\~no entonces se va a dedicar a buscar ese ni\~no y luego llevarlo al corral mas distante de su posici\'on. En el caso de que lo m\'as cercano sea una suciedad entonces se va a centrar en ir y limpiar esa casilla sucia.
+		
+		Si en el trayecto del robot hacia el ni\~no o la suciedad que est\'a m\'as cerca de su posici\'on ocurre un cambio en el ambiente que hace que alg\'un otro elemento est\'e m\'as cercano entonces el robot reajustar\'a el objetivo hacia el cual se mueve. 
+		
+		Este modelo va a estar encapsulado en la clase \texttt{NearFirstRobot}.    
+	
+	\section{Ideas seguidas para la implementaci\'on}
+	La modelaci\'on del ambiente se encuentra en el archivo \textbf{environment.py}. Se tiene una clase \texttt{Environment} que contiene los siguientes atributos y m\'etodos que permiten describir un ambiente:
+	\begin{itemize}
+		\item \texttt{matrix}: es un diccionario que tiene como llave una tupla \texttt{(i,j)} y como valor el objeto que representa al elemento que se encuentra en la posici\'on \texttt{(i,j)} del ambiente o \texttt{None} en caso de que est\'e vac\'ia. 
+		\item \texttt{robot}: contiene el objeto \texttt{Robot} que act\'ua como agente en el ambiente.
+		\item \texttt{dirty\_count}: sirve para registrar los niveles de suciedad en cada turno y luego calcular el nivel de suciedad promedio.
+		\item \texttt{set\_playpen()}: coloca el corral en el ambiente.
+		\item \texttt{initialize()}: coloca ni\~nos, suciedad y objetos en el ambiente.
+		\item \texttt{initialize\_robot()}: crea el robot y lo coloca en una posici\'on vac\'ia del ambiente.
+		\item \texttt{generate\_dirtiness()}: se encarga de seleccionar las casillas que van a ser ensuciadas seg\'un la ubicaci\'on de los ni\~nos en el ambiente.
+		\item \texttt{natural\_change()}: realiza las acciones que describen un cambio natural del ambiente.
+		\item \texttt{random\_change()}: realiza las acciones que describen un cambio aleatorio del ambiente.
+	\end{itemize} 
+
+	Los elementos del ambiente se encuentran modelados en el archivo \textbf{elements.py}. El dise\~no consiste en una clase base \texttt{Element}. Esta clase est\'a formada por los siguientes atributos y m\'etodos:
+	\begin{itemize}
+		\item \texttt{pos}: es una tupla \texttt{(i,j)} que describe la posici\'on del elemento.
+		\item \texttt{environment}: es un objeto de tipo \texttt{Environment} que describe el ambiente al que pertenece el elemento.
+		\item \texttt{find\_next\_step()}: dada una direcci\'on a la que moverse calcula la posici\'on en la que te colocar\'ias.
+		\item \texttt{step()}: cambia la posici\'on del elemento en el ambiente.
+	\end{itemize}	
+	\texttt{Element} va a ser la clase base para las siguientes:
+	\begin{itemize}
+		\item \texttt{Child}: representa un ni\~no.\\
+		Esta clase adem\'as va a definir los siguientes m\'etodos:
+		 \begin{itemize}
+		 	\item \texttt{move}: realiza el movimiento de los ni\~nos en el ambiente.
+		 \end{itemize}
+		\item \texttt{Obstacle}: representa un obst\'aculo.\\
+		Esta clase adem\'as va a definir los siguientes m\'etodos:
+		\begin{itemize}
+			\item \texttt{move}: realiza el movimiento de los obst\'aculos cuando son empujados por los ni\~nos.
+		\end{itemize}
+		\item \texttt{Dirty}: representa una suciedad.
+		\item \texttt{Playpen}: representa un corral.\\
+		Esta clase adem\'as va a definir los siguientes atributos:
+		\begin{itemize}
+			\item \texttt{child}: es un  \textit{bool} que indica si el corral contiene o no un ni\~no.
+		\end{itemize}
+		\item \texttt{Robot}: representa el robot. \\
+		Esta clase va a definir los siguientes atributos y m\'etodos:
+		\begin{itemize}
+			\item \texttt{child}: es un  \textit{bool} que indica si el robot tiene cargado o no un ni\~no.
+			\item \texttt{bfs()}: calcula la distancia y el camino hacia todos los elementos del ambiente.
+			\item \texttt{get\_path()}: devuelve el camino hacia un elemento determinado del ambiente.
+			\item \texttt{find\_near\_element()}: dado un conjunto de elementos devuelve el m\'as cercano de ellos. 
+			\item \texttt{find\_far\_element()}: dado un conjunto de elementos devuelve el m\'as lejano de ellos. 
+		\end{itemize}
+		Los modelos de agentes implementados \texttt{NearFirstRobot} y \texttt{ChildsFirstRobot} van a heredar de esta clase y definir sus estrategias en un m\'etodo llamado \texttt{move()}. 
+	\end{itemize}
+	
+	En el archivo \textbf{main.py} es donde se definen los ambientes iniciales, se ejecutan las simulaciones y se guarda la informaci\'on que describe los resultados.
+
+	\section{Consideraciones obtenidas a partir de la ejecuci\'on de las simulaciones del problema}
+	
+	Se construyeron ambientes iniciales con las caracter\'isticas que se muestran en el Cuadro \ref{ambientes}.
+	
+		\begin{table}[htb]
+		\centering
+		\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
+			\hline
+			\multicolumn{7}{|c|}{Par\'ametros} \\ \hline
+			No. Ambiente & N & M & Ni\~nos & Porciento de Suciedad & Porciento de Obst\'aculos & t \\
+			\hline
+			1 & 10 & 10 & 5 & 30 & 20 & 10 \\
+			\hline
+			2 & 7 & 8 & 3 & 20 & 10 & 5 \\
+			\hline
+			3 & 7 & 8 & 3 & 20 & 10 & 20 \\
+			\hline
+			4 & 15 & 15 & 10 & 20 & 20 & 50 \\
+			\hline
+			5 & 5 & 5 & 2 & 10 & 5 & 5 \\
+			\hline
+			6 & 10 & 5 & 3 & 30 & 20 & 10 \\
+			\hline
+			7 & 10 & 10 & 5 & 40 & 10 & 20 \\
+			\hline
+			8 & 10 & 10 & 5 & 10 & 40 & 30 \\
+			\hline
+			9 & 9 & 9 & 3 & 30 & 20 & 20 \\
+			\hline
+			10 & 10 & 10 & 4 & 20 & 20 & 20 \\
+			\hline
+		\end{tabular}
+		\caption{Ambientes iniciales.}
+		\label{ambientes}
+	\end{table}	
+
+Cada uno de los modelos de agente implementados se coloc\'o en un ambiente con cada una de las caracter\'isticas descritas en el Cuadro \ref{ambientes} y se realizaron 30 simulaciones en cada ambiente.En el Cuadro \ref{modelo1} se reportan los resultados obtenidos con el Modelo 1, mientras que en el Cuadro \ref{modelo2} se reporta el comportamiento del Modelo 2. Adem\'as esta informaci\'on se encuentra en el archivo \textbf{output.txt} que es la salida de la ejecuci\'on de las simulaciones.
+
+
+\begin{table}[htb]
+	\centering
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		\multicolumn{5}{|c|}{Resultados} \\ \hline
+		No. & Casa Limpia  & Despedido & Tiempo Agotado & Media del Porciento  \\
+		 &  y ni\~nos en corral &  &  &  de Casillas Sucias\\
+		\hline
+		1 & 28 & 0 & 2 & 23.32 \\
+		\hline
+		2 & 28 & 0 & 2 & 14.6 \\
+		\hline
+		3 & 24 & 0 & 6 & 12.67 \\ 
+		\hline
+		4 & 30 & 0 & 0 & 17.91 \\
+		\hline
+		5 & 22 & 0 & 8 & 5.9 \\
+		\hline
+		6 & 25 & 0 & 5 & 23.06 \\
+		\hline
+		7 & 29 & 0 & 1 & 26.84 \\
+		\hline
+		8 & 28 & 0 & 2 & 11.37 \\
+		\hline
+		9 & 28 & 0 & 2 & 21.78 \\
+		\hline
+		10 & 26 & 0 & 4 & 14.84 \\
+		\hline
+	\end{tabular}
+	\caption{Modelo 1.}
+	\label{modelo1}
+\end{table}
+
+\newpage
+
+\begin{table}[htb]
+	\centering
+	\begin{tabular}{|c|c|c|c|c|}
+	\hline
+	\multicolumn{5}{|c|}{Resultados} \\ \hline
+	No. & Casa Limpia  & Despedido & Tiempo Agotado & Media del Porciento  \\
+	&  y ni\~nos en corral &  &  &  de Casillas Sucias\\
+	\hline
+	1 & 29 & 0 & 1 & 17.2 \\
+	\hline
+	2 & 21 & 0 & 9 & 7.67 \\
+	\hline
+	3 & 28 & 0 & 2 & 9.46 \\ 
+	\hline
+	4 & 30 & 0 & 0 & 11.24 \\
+	\hline
+	5 & 18 & 0 & 12 & 2.86 \\
+	\hline
+	6 & 26 & 0 & 4 & 15.81 \\
+	\hline
+	7 & 28 & 0 & 2 & 19.34 \\
+	\hline
+	8 & 28 & 0 & 2 & 7.66 \\
+	\hline
+	9 & 29 & 0 & 1 & 16 \\
+	\hline
+	10 & 26 & 0 & 4 & 10.07 \\
+	\hline
+\end{tabular}
+	\caption{Modelo 2.}
+	\label{modelo2}
+\end{table}
+	
+Al analizar los resultados obtenidos se observa que ambos modelos presentaron un buen desempe\~no, dado que nunca fueron despedidos y, como se observa en el Cuadro \ref{ambientes}, los niveles de suciedad iniciales y la cantidad de ni\~nos en el ambiente por lo general son significativos. 
+Adem\'as se puede apreciar que la media del porciento de suciedad siempre es mayor en el primer modelo, lo cual es razonable dado que ese modelo otorga mayor prioridad a colocar los ni\~nos en el corral, mientras que el segundo va realizando ambas tareas a la vez.  	
+\end{document}

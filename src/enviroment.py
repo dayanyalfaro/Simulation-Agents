@@ -2,12 +2,14 @@ from elements import *
 import random
 
 class Environment:
-    def __init__(self, width, height, dirtiness, obstacles, children, robot_initializer):
+    def __init__(self, width, height, dirtiness, obstacles, children):
         self.width = width
         self.height = height
+        self.children = children
         self.total = width * height
         self.matrix = {(i, j): None for i in range(height) for j in range(width)}
         self.robot = None
+        self.dirty_count = []
         while not self.set_playpen(children, pos=(random.randint(0, height - 1), random.randint(0, width - 1))):
             pass
         print('Playpen Done')
@@ -17,8 +19,6 @@ class Environment:
         print('Child Done')
         self.initialize(obstacles, Obstacle)
         print('Obstacle Done')
-        self.initialize_robot(robot_initializer)
-        print('Robot Done')
 
     def __str__(self):
         line = ""
@@ -35,7 +35,8 @@ class Environment:
                     line += 'P  '
                 else:
                     line += '_  '
-        line += f'\nRobot Position:{self.robot.pos}'
+        # line += f'\nRobot Position:{self.robot.pos}'
+        line += f'\n'
         return line
 
 
@@ -86,7 +87,6 @@ class Environment:
         for dist in d.values():
             if not dist:
                 factible = False
-        print("verified")
         return factible
 
     def initialize(self, percent, initializer):
@@ -118,7 +118,7 @@ class Environment:
         return position[0] >= 0 and position[0] < self.height and position[1] >= 0 and position[1] < self.width 
 
     def get_empty_spaces(self):
-        return [pos for pos in self.matrix.keys() if not self.matrix[pos]]
+        return [pos for pos in self.matrix.keys() if type(self.matrix[pos]) not in [Child,Playpen,Obstacle]]
 
     def get_dirty_spaces(self):
         return [pos for pos in self.matrix.keys() if type(self.matrix[pos]) is Dirty]
@@ -136,10 +136,14 @@ class Environment:
                 return False
         return True
 
-    def is_final_state(self):
+    def get_dirty_percent(self):
         dirty_spaces = len(self.get_dirty_spaces())
-        very_dirty = (dirty_spaces / self.total) > 0.6
-        forever_clean = dirty_spaces == 0 and self.is_playpen_full()
+        empty_spaces = len(self.get_empty_spaces())
+        return 100 * dirty_spaces / empty_spaces
+
+    def is_final_state(self):
+        very_dirty = self.get_dirty_percent() > 60
+        forever_clean = len(self.get_dirty_spaces()) == 0 and self.is_playpen_full()
         if very_dirty:
             return True, 0
         elif forever_clean:
@@ -211,6 +215,7 @@ class Environment:
 
 
     def natural_change(self):
+        self.dirty_count.append(self.get_dirty_percent())
         self.generate_dirtiness()
         childs = self.get_childs()
         for child in childs:
