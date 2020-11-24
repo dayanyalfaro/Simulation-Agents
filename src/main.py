@@ -6,7 +6,7 @@ DIRTINESS_UP_60_PERCENT = 0
 CHILDREN_UNDER_CONTROL_CLEAN_HOUSE = 1
 TIME_OVER = 2
 
-output_fd = open('output.txt', 'w')
+output_fd = open('test.txt', 'w')
 
 class Simulation:
     def __init__(self, width, height, dirtiness, obstacles, children, interval, id):
@@ -70,16 +70,16 @@ class Simulation:
         output_fd.write(f'Dirty Mean: {sum(self.dirty_mean)/len(self.dirty_mean)}\n')
         output_fd.write('\n')
 
-environments = [Simulation(width=10, height=10, dirtiness=30, obstacles=20, children=6, interval=10, id = 1),
+environments = [Simulation(width=10, height=10, dirtiness=30, obstacles=20, children=5, interval=10, id = 1),
                 Simulation(width=7, height=8, dirtiness=20, obstacles=10, children=3, interval=5, id = 2),
-                Simulation(width=7, height=8, dirtiness=20, obstacles=10, children=4, interval=20, id = 3),
+                Simulation(width=7, height=8, dirtiness=20, obstacles=10, children=3, interval=20, id = 3),
                 Simulation(width=15, height=15, dirtiness=20, obstacles=20, children=10, interval=50, id = 4),
                 Simulation(width=5, height=5, dirtiness=10, obstacles=5, children=2, interval=5, id = 5),
-                Simulation(width=10, height=5, dirtiness=30, obstacles=20, children=4, interval=10, id = 6),
-                Simulation(width=10, height=10, dirtiness=40, obstacles=10, children=6, interval=20, id = 7),
-                Simulation(width=10, height=10, dirtiness=10, obstacles=40, children=7, interval=30, id = 8),
-                Simulation(width=9, height=9, dirtiness=30, obstacles=20, children=4, interval=20, id = 9),
-                Simulation(width=10, height=10, dirtiness=20, obstacles=20, children=5, interval=20, id=10)
+                Simulation(width=10, height=5, dirtiness=30, obstacles=20, children=3, interval=10, id = 6),
+                Simulation(width=10, height=10, dirtiness=40, obstacles=10, children=5, interval=20, id = 7),
+                Simulation(width=10, height=10, dirtiness=10, obstacles=40, children=5, interval=30, id = 8),
+                Simulation(width=9, height=9, dirtiness=30, obstacles=20, children=3, interval=20, id = 9),
+                Simulation(width=10, height=10, dirtiness=20, obstacles=20, children=4, interval=20, id=10)
                 ]
 
 
@@ -102,4 +102,3 @@ for e in environments:
         e.run(NearFirstRobot)
     e.report_results()
     e.restart()
-    
