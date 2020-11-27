@@ -138,8 +138,7 @@ class Environment:
 
     def get_dirty_percent(self):
         dirty_spaces = len(self.get_dirty_spaces())
-        empty_spaces = len(self.get_empty_spaces())
-        return 100 * dirty_spaces / empty_spaces
+        return 100 * dirty_spaces / self.total
 
     def is_final_state(self):
         very_dirty = self.get_dirty_percent() > 60
@@ -190,7 +189,10 @@ class Environment:
                 square = self.get_square(i,j)
                 childs = [pos for pos in square if type(self.matrix[pos]) is Child]
                 if childs:
-                    empty = [pos for pos in square if not type(self.matrix[pos])]
+                    empty = []
+                    for pos in square:
+                        if type(self.matrix[pos]) not in [Child,Playpen,Obstacle,Dirty]:
+                            empty.append(pos)
                     if len(childs) == 1:
                         cant = min(len(empty), random.randint(0,1))
                         self.positions_to_dirty += random.sample(empty,cant)
